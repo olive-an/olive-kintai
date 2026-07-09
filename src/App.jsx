@@ -105,6 +105,7 @@ export default function App() {
   const [clock, setClock]       = useState("");
   const [dateStr, setDateStr]   = useState("");
   const [feedback, setFeedback] = useState(null);
+  const [dismissedNotifIds, setDismissedNotifIds] = useState([]);
 
   // スタッフ管理フォーム
   const [newStaffName, setNewStaffName]   = useState("");
@@ -176,6 +177,7 @@ export default function App() {
     setLeaves(prev => [...prev, rec]);
     setLeaveStart(""); setLeaveEnd(""); setLeaveReason(""); setLeaveType("全休");
     setFeedback({ msg: "有給申請を送信しました", ok: true });
+    sendPushNotification("新しい有給申請", `${selectedStaff.name}さんから申請（${leaveStart}〜${end}）が届きました`);
   }
 
   // ── プッシュ通知 ──
@@ -372,8 +374,6 @@ export default function App() {
 
     const canIn    = status === "未出勤";
     const canOut   = status === "出勤中";
-    const canBreakS = status === "出勤中";
-    const canBreakE = status === "休憩中";
 
     const StatusTag = ({ s }) => {
       const m = { "未出勤":[C.border,"#555"], "出勤中":[C.olivePale2,C.olive], "休憩中":[C.breakPale,C.break], "退勤済":["#e8e8e8","#555"] };
@@ -444,10 +444,8 @@ export default function App() {
             {/* 打刻ボタン */}
             <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:4 }}>
               {[
-                ["出勤",    canIn,     C.olivePale2, C.olive],
-                ["退勤",    canOut,    "#fde8e8",    C.danger],
-                ["休憩開始", canBreakS, C.breakPale, C.break],
-                ["休憩終了", canBreakE, C.warnPale,  C.warn],
+                ["出勤", canIn,  C.olivePale2, C.olive],
+                ["退勤", canOut, "#fde8e8",    C.danger],
               ].map(([label, enabled, bg, color]) => (
                 <button key={label} onClick={() => enabled && punch(label)}
                   style={{ padding:"18px 10px", borderRadius:12, border:"none", background:bg,
@@ -563,8 +561,10 @@ export default function App() {
   );
 
   function checkAdminPw() {
-    if (pwInput === adminPwLocal) { setPwInput(""); setPwError(""); setAdminTab("status"); setScreen("adminHome"); }
-    else setPwError("パスワードが違います");
+    if (pwInput === adminPwLocal) {
+      setPwInput(""); setPwError(""); setAdminTab("status"); setScreen("adminHome");
+      requestNotificationPermission();
+    } else setPwError("パスワードが違います");
   }
 
   // ── 管理者ホーム ──
@@ -572,10 +572,41 @@ export default function App() {
     const todayStaff = staff.map(s => ({ ...s, status: currentStatus(s.id), home: homes.find(h => h.id === s.homeId)?.name || "" }));
     const pendingLeaves = leaves.filter(l => l.status === "申請中");
     const doneLeaves    = leaves.filter(l => l.status !== "申請中");
+    const newLeaveNotifs = pendingLeaves.filter(l => !dismissedNotifIds.includes(l.id));
 
     return (
       <div style={S.page}>
         <FeedbackBar />
+
+        {/* 有給申請 チャット風通知 */}
+        {newLeaveNotifs.length > 0 && (
+          <div style={{ position:"fixed", bottom:16, right:16, zIndex:998, display:"flex", flexDirection:"column", gap:10, width:"min(320px, calc(100vw - 32px))" }}>
+            {newLeaveNotifs.map(l => (
+              <div key={l.id} style={{ background:C.card, borderRadius:"16px 16px 4px 16px", boxShadow:"0 6px 20px rgba(0,0,0,.18)", padding:"14px 14px 12px", border:`1px solid ${C.border}` }}>
+                <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:8 }}>
+                  <div style={{ width:30, height:30, borderRadius:"50%", background:staff.find(s=>s.id===l.staffId)?.color || C.olivePale2, display:"flex", alignItems:"center", justifyContent:"center", fontWeight:800, fontSize:".72rem", color:"#444", flexShrink:0 }}>
+                    {initials(l.staffName)}
+                  </div>
+                  <div style={{ flex:1 }}>
+                    <div style={{ fontWeight:800, fontSize:".85rem" }}>{l.staffName}</div>
+                    <div style={{ fontSize:".68rem", color:C.muted }}>有給申請</div>
+                  </div>
+                  <button onClick={() => setDismissedNotifIds(prev => [...prev, l.id])}
+                    style={{ background:"none", border:"none", color:C.muted, fontSize:"1rem", cursor:"pointer", padding:2, lineHeight:1 }}>×</button>
+                </div>
+                <div style={{ fontSize:".85rem", fontWeight:600, marginBottom:2 }}>{l.start}{l.start!==l.end?`〜 ${l.end}`:""}（{l.type}・{l.days}日分）</div>
+                <div style={{ fontSize:".78rem", color:C.muted, marginBottom:12 }}>{l.reason}</div>
+                <div style={{ display:"flex", gap:8 }}>
+                  <button onClick={() => { approveLeave(l.id, true); setDismissedNotifIds(prev => [...prev, l.id]); }}
+                    style={{ flex:1, padding:"9px", borderRadius:9, border:"none", background:C.olivePale2, color:C.olive, fontWeight:700, fontSize:".82rem", cursor:"pointer" }}>承認</button>
+                  <button onClick={() => { approveLeave(l.id, false); setDismissedNotifIds(prev => [...prev, l.id]); }}
+                    style={{ flex:1, padding:"9px", borderRadius:9, border:"none", background:C.dangerPale, color:C.danger, fontWeight:700, fontSize:".82rem", cursor:"pointer" }}>却下</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
         {/* ヘッダー */}
         <div style={{ padding:"14px 16px 10px", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
           <div>
