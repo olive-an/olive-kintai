@@ -307,13 +307,8 @@ export default function App() {
     <div style={{ ...S.page, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", minHeight:"100vh", padding:24, background:"#1a2744" }}>
       <FeedbackBar />
       <div style={{ marginBottom:20, textAlign:"center" }}>
-        <div style={{ display:"inline-flex", alignItems:"baseline", gap:0, background:"#ffffff", borderRadius:24, padding:"12px 28px 12px 20px", boxShadow:"0 4px 20px rgba(0,0,0,.25)" }}>
-          <span style={{ fontSize:"2.6rem", fontWeight:900, color:"#6abf3a", lineHeight:1 }}>O</span>
-          <span style={{ fontSize:"2.6rem", fontWeight:900, color:"#3ab8c8", lineHeight:1 }}>l</span>
-          <span style={{ fontSize:"2.6rem", fontWeight:900, color:"#e83a8c", lineHeight:1 }}>i</span>
-          <span style={{ fontSize:"2.6rem", fontWeight:900, color:"#e87820", lineHeight:1 }}>v</span>
-          <span style={{ fontSize:"2.6rem", fontWeight:900, color:"#b05a20", lineHeight:1 }}>e</span>
-          <span style={{ fontSize:"1.2rem", fontWeight:900, color:"#b05a20", lineHeight:1, marginLeft:2 }}>庵</span>
+        <div style={{ display:"inline-flex", background:"#ffffff", borderRadius:24, padding:"18px 32px", boxShadow:"0 4px 20px rgba(0,0,0,.25)" }}>
+          <img src="/logo.png" alt="Olive庵" style={{ height:72, width:"auto", display:"block" }} />
         </div>
       </div>
       <div style={{ fontSize:"1.4rem", fontWeight:800, marginBottom:4, color:"#ffffff" }}>勤怠管理</div>
