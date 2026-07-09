@@ -14,12 +14,62 @@ const INITIAL_HOMES = [
 const ADMIN_PASSWORD = "admin2026";
 
 const INITIAL_STAFF = [
-  { id: 1, name: "田中 健一",  homeId: "nishikujo",    role: "世話人",       color: "#a8c4e0" },
-  { id: 2, name: "鈴木 花子",  homeId: "kujo",         role: "生活支援員",   color: "#f4b8c1" },
-  { id: 3, name: "佐藤 隆",    homeId: "torishima",   role: "世話人",       color: "#b8d4a8" },
-  { id: 4, name: "中村 美咲",  homeId: "kasugade",    role: "生活支援員",   color: "#f4d4a0" },
-  { id: 5, name: "高橋 浩二",  homeId: "dekijima",    role: "管理者",       color: "#c4b8e8" },
+  { id: 1, name: "畠　博思", homeIds: ["honsha"], role: "会長・管理者・サービス管理責任者", color: "#a8c4e0" },
+  { id: 2, name: "高崎　忍", homeIds: ["honsha"], role: "代表取締役", color: "#f4b8c1" },
+  { id: 3, name: "竹政　高", homeIds: ["kujo"], role: "世話人", color: "#b8d4a8" },
+  { id: 4, name: "黒田　栄光", homeIds: ["nishikujo","kujo"], role: "世話人", color: "#f4d4a0" },
+  { id: 5, name: "向原　忍", homeIds: ["nishikujo"], role: "日中支援員", color: "#c4b8e8" },
+  { id: 6, name: "浅野　和子", homeIds: ["kujo"], role: "日中支援員", color: "#f0c8a0" },
+  { id: 7, name: "吉山　綾", homeIds: ["kasugade"], role: "事務員（経理）世話人", color: "#a8d4d4" },
+  { id: 8, name: "棟長　秀行", homeIds: ["nishikujo"], role: "世話人", color: "#a8c4e0" },
+  { id: 9, name: "川浪　明香", homeIds: ["torishima"], role: "世話人", color: "#f4b8c1" },
+  { id: 10, name: "吉永　みゆき", homeIds: ["torishima"], role: "世話人", color: "#b8d4a8" },
+  { id: 11, name: "岩久保　博一", homeIds: ["honsha"], role: "事務員（総務）", color: "#f4d4a0" },
+  { id: 12, name: "小林　浩", homeIds: ["kujo"], role: "世話人", color: "#c4b8e8" },
+  { id: 13, name: "小池　真美", homeIds: ["honsha"], role: "事務員", color: "#f0c8a0" },
+  { id: 14, name: "金野　孝生", homeIds: ["kujo"], role: "世話人", color: "#a8d4d4" },
+  { id: 15, name: "梶原　穂乃香", homeIds: ["honsha"], role: "障がい者サテライト事業部・指導員", color: "#a8c4e0" },
+  { id: 16, name: "和田　憲明", homeIds: ["nishikujo","shinkoriyama","kasugade"], role: "世話人", color: "#f4b8c1" },
+  { id: 17, name: "神田　暁史", homeIds: ["nishikujo","kujo","torishima","shinkoriyama","kasugade","dekijima"], role: "世話人・障がい者サテライト事業部管理者", color: "#b8d4a8" },
+  { id: 18, name: "池本　ひとみ", homeIds: ["shinkoriyama"], role: "日中支援員", color: "#f4d4a0" },
+  { id: 19, name: "梶原　瑛洋", homeIds: ["honsha"], role: "障がい者サテライト事業部・指導員", color: "#c4b8e8" },
+  { id: 20, name: "長井　準", homeIds: ["nishikujo"], role: "世話人", color: "#f0c8a0" },
+  { id: 21, name: "堀口　美香", homeIds: ["nishikujo","torishima","shinkoriyama"], role: "世話人", color: "#a8d4d4" },
+  { id: 22, name: "広田　侑紀", homeIds: ["dekijima"], role: "世話人", color: "#a8c4e0" },
+  { id: 23, name: "丸川　星奈", homeIds: ["torishima","dekijima"], role: "世話人", color: "#f4b8c1" },
+  { id: 24, name: "福田　久男", homeIds: ["shinkoriyama"], role: "世話人", color: "#b8d4a8" },
+  { id: 25, name: "中嶋　健二", homeIds: ["kujo"], role: "準夜勤", color: "#f4d4a0" },
+  { id: 26, name: "檜原　あゆみ", homeIds: ["kasugade"], role: "準夜勤→夜勤", color: "#c4b8e8" },
+  { id: 27, name: "鈴木　基宏", homeIds: ["shinkoriyama"], role: "準夜勤", color: "#f0c8a0" },
+  { id: 28, name: "上垣　卓也", homeIds: ["kasugade"], role: "準夜勤", color: "#a8d4d4" },
+  { id: 29, name: "中岡　優紀", homeIds: ["honsha"], role: "看護師", color: "#a8c4e0" },
+  { id: 30, name: "西尾　満美子", homeIds: ["nishikujo","kujo","torishima","kasugade","dekijima"], role: "世話人", color: "#f4b8c1" },
+  { id: 31, name: "李　俊輝", homeIds: ["nishikujo","kujo"], role: "世話人", color: "#b8d4a8" },
+  { id: 32, name: "今井　亮平", homeIds: ["kujo"], role: "準夜勤", color: "#f4d4a0" },
+  { id: 33, name: "蛭子　美穂", homeIds: ["kujo"], role: "世話人", color: "#c4b8e8" },
+  { id: 34, name: "大谷　恭祐", homeIds: ["nishikujo","kujo"], role: "準夜勤", color: "#f0c8a0" },
+  { id: 35, name: "増川　美由紀", homeIds: ["dekijima"], role: "準夜勤", color: "#a8d4d4" },
+  { id: 36, name: "金井　信夫", homeIds: ["nishikujo"], role: "準夜勤", color: "#a8c4e0" },
+  { id: 37, name: "坂梨　幸恵子", homeIds: ["kujo","dekijima"], role: "世話人", color: "#f4b8c1" },
+  { id: 38, name: "廣田　誠", homeIds: ["kujo"], role: "世話人", color: "#b8d4a8" },
+  { id: 39, name: "吉山スカイラ", homeIds: ["kasugade"], role: "世話人", color: "#f4d4a0" },
+  { id: 40, name: "野田　由美子", homeIds: ["torishima"], role: "世話人", color: "#c4b8e8" },
+  { id: 41, name: "松下　久子", homeIds: ["torishima"], role: "準夜勤", color: "#f0c8a0" },
+  { id: 42, name: "中川　良広", homeIds: ["nishikujo"], role: "夜勤", color: "#a8d4d4" },
+  { id: 44, name: "竹原　龍二", homeIds: ["shinkoriyama"], role: "世話人", color: "#a8c4e0" },
+  { id: 45, name: "富山　史子", homeIds: ["nishikujo"], role: "世話人", color: "#f4b8c1" },
+  { id: 46, name: "鳥居　万祐子", homeIds: ["kasugade","shinkoriyama"], role: "世話人", color: "#b8d4a8" },
+  { id: 47, name: "平良　和子", homeIds: ["dekijima"], role: "世話人", color: "#f4d4a0" },
+  { id: 48, name: "中島　真弓", homeIds: ["kujo"], role: "世話人", color: "#c4b8e8" },
+  { id: 49, name: "中尾　良仁", homeIds: ["nishikujo"], role: "夜勤", color: "#f0c8a0" },
+  { id: 50, name: "川浪　彩乃", homeIds: ["torishima"], role: "準夜勤", color: "#a8d4d4" },
+  { id: 51, name: "岩本　星江", homeIds: ["torishima"], role: "準夜勤", color: "#a8c4e0" },
+  { id: 52, name: "上念　直実", homeIds: ["kasugade","dekijima"], role: "世話人", color: "#f4b8c1" },
+  { id: 53, name: "岸田　大輔", homeIds: ["nishikujo"], role: "準夜勤", color: "#b8d4a8" },
+  { id: 54, name: "吉岡　志保美", homeIds: ["kasugade","dekijima"], role: "世話人", color: "#f4d4a0" },
 ];
+
+const ROLES = ["世話人","日中支援員","準夜勤","夜勤","看護師","事務員","事務員（総務）","事務員（経理）世話人","障がい者サテライト事業部・指導員","世話人・障がい者サテライト事業部管理者","会長・管理者・サービス管理責任者","代表取締役","準夜勤→夜勤"];
 
 // ── ユーティリティ ──
 const pad = n => String(n).padStart(2, "0");
@@ -109,7 +159,7 @@ export default function App() {
 
   // スタッフ管理フォーム
   const [newStaffName, setNewStaffName]   = useState("");
-  const [newStaffHome, setNewStaffHome]   = useState("");
+  const [newStaffHomes, setNewStaffHomes] = useState([]);
   const [newStaffRole, setNewStaffRole]   = useState("世話人");
   const [editStaffId, setEditStaffId]     = useState(null);
 
@@ -170,7 +220,7 @@ export default function App() {
     const days = leaveType === "半休" ? 0.5 : Math.round((e - s) / 86400000) + 1;
     const rec = {
       id: Date.now(), staffId: selectedStaff.id, staffName: selectedStaff.name,
-      homeId: selectedStaff.homeId,
+      homeIds: selectedStaff.homeIds,
       start: leaveStart, end, days, reason: leaveReason || "理由なし",
       type: leaveType, status: "申請中", appliedAt: TODAY(),
     };
@@ -207,17 +257,21 @@ export default function App() {
   }
 
   function addStaff() {
-    if (!newStaffName.trim() || !newStaffHome) { setFeedback({ msg: "氏名と所属ホームを入力してください", ok: false }); return; }
+    if (!newStaffName.trim() || newStaffHomes.length === 0) { setFeedback({ msg: "氏名と所属ホームを入力してください", ok: false }); return; }
     const colors = ["#a8c4e0","#f4b8c1","#b8d4a8","#f4d4a0","#c4b8e8","#f0c8a0","#a8d4d4"];
     const color = colors[staff.length % colors.length];
     if (editStaffId) {
-      setStaff(prev => prev.map(s => s.id === editStaffId ? { ...s, name: newStaffName.trim(), homeId: newStaffHome, role: newStaffRole } : s));
+      setStaff(prev => prev.map(s => s.id === editStaffId ? { ...s, name: newStaffName.trim(), homeIds: newStaffHomes, role: newStaffRole } : s));
       setEditStaffId(null);
     } else {
-      setStaff(prev => [...prev, { id: Date.now(), name: newStaffName.trim(), homeId: newStaffHome, role: newStaffRole, color }]);
+      setStaff(prev => [...prev, { id: Date.now(), name: newStaffName.trim(), homeIds: newStaffHomes, role: newStaffRole, color }]);
     }
-    setNewStaffName(""); setNewStaffHome(""); setNewStaffRole("世話人");
+    setNewStaffName(""); setNewStaffHomes([]); setNewStaffRole("世話人");
     setFeedback({ msg: editStaffId ? "スタッフ情報を更新しました" : "スタッフを追加しました", ok: true });
+  }
+
+  function toggleNewStaffHome(id) {
+    setNewStaffHomes(prev => prev.includes(id) ? prev.filter(h => h !== id) : [...prev, id]);
   }
 
   function deleteStaff(id) {
@@ -325,7 +379,7 @@ export default function App() {
   );
 
   function checkName() {
-    const homeStaff = staff.filter(s => s.homeId === selectedHome?.id);
+    const homeStaff = staff.filter(s => s.homeIds.includes(selectedHome?.id));
     const norm = str => str.replace(/\s+/g, "");
     const match = homeStaff.find(s => norm(s.name) === norm(pwInput));
     if (match) {
@@ -542,7 +596,7 @@ export default function App() {
 
   // ── 管理者ホーム ──
   if (screen === "adminHome") {
-    const todayStaff = staff.map(s => ({ ...s, status: currentStatus(s.id), home: homes.find(h => h.id === s.homeId)?.name || "" }));
+    const todayStaff = staff.map(s => ({ ...s, status: currentStatus(s.id), home: s.homeIds.map(id => homes.find(h => h.id === id)?.name).filter(Boolean).join("・") }));
     const pendingLeaves = leaves.filter(l => l.status === "申請中");
     const doneLeaves    = leaves.filter(l => l.status !== "申請中");
     const newLeaveNotifs = pendingLeaves.filter(l => !dismissedNotifIds.includes(l.id));
@@ -691,17 +745,23 @@ export default function App() {
               <div style={{ fontWeight:700, marginBottom:12 }}>{editStaffId ? "スタッフ編集" : "スタッフ追加"}</div>
               <div style={{ fontSize:".78rem", color:C.muted, marginBottom:6 }}>氏名</div>
               <input value={newStaffName} onChange={e=>setNewStaffName(e.target.value)} placeholder="例：山田 花子" style={S.input} />
-              <div style={{ fontSize:".78rem", color:C.muted, marginBottom:6 }}>所属ホーム</div>
-              <select value={newStaffHome} onChange={e=>setNewStaffHome(e.target.value)} style={{ ...S.input, marginBottom:12 }}>
-                <option value="">選択してください</option>
-                {homes.map(h => <option key={h.id} value={h.id}>{h.name}</option>)}
-              </select>
+              <div style={{ fontSize:".78rem", color:C.muted, marginBottom:6 }}>所属ホーム（複数選択可）</div>
+              <div style={{ display:"flex", flexWrap:"wrap", gap:8, marginBottom:14 }}>
+                {homes.map(h => (
+                  <button key={h.id} type="button" onClick={()=>toggleNewStaffHome(h.id)}
+                    style={{ padding:"8px 14px", borderRadius:20, border:`2px solid ${newStaffHomes.includes(h.id)?C.olive:C.border}`,
+                      background: newStaffHomes.includes(h.id)?C.olivePale:"#faf9f7", color: newStaffHomes.includes(h.id)?C.olive:C.muted,
+                      fontWeight:700, fontSize:".82rem", cursor:"pointer" }}>
+                    {h.name}
+                  </button>
+                ))}
+              </div>
               <div style={{ fontSize:".78rem", color:C.muted, marginBottom:6 }}>役職</div>
               <select value={newStaffRole} onChange={e=>setNewStaffRole(e.target.value)} style={{ ...S.input, marginBottom:14 }}>
-                {["世話人","生活支援員","管理者","サービス管理責任者","夜勤専従"].map(r=><option key={r}>{r}</option>)}
+                {ROLES.map(r=><option key={r}>{r}</option>)}
               </select>
               <button onClick={addStaff} style={S.btn(C.olive,"#fff")}>{editStaffId?"更新する":"追加する"}</button>
-              {editStaffId && <button onClick={()=>{setEditStaffId(null);setNewStaffName("");setNewStaffHome("");setNewStaffRole("世話人");}}
+              {editStaffId && <button onClick={()=>{setEditStaffId(null);setNewStaffName("");setNewStaffHomes([]);setNewStaffRole("世話人");}}
                 style={S.btn("#fff",C.muted,`2px solid ${C.border}`)}>キャンセル</button>}
             </div>
             <div style={{ fontWeight:700, fontSize:".9rem", marginBottom:8 }}>登録スタッフ一覧</div>
@@ -712,9 +772,9 @@ export default function App() {
                 </div>
                 <div style={{ flex:1 }}>
                   <div style={{ fontWeight:700, fontSize:".92rem" }}>{s.name}</div>
-                  <div style={{ fontSize:".73rem", color:C.muted }}>{homes.find(h=>h.id===s.homeId)?.name}　{s.role}</div>
+                  <div style={{ fontSize:".73rem", color:C.muted }}>{s.homeIds.map(id=>homes.find(h=>h.id===id)?.name).filter(Boolean).join("・")}　{s.role}</div>
                 </div>
-                <button onClick={()=>{setEditStaffId(s.id);setNewStaffName(s.name);setNewStaffHome(s.homeId);setNewStaffRole(s.role);setAdminTab("staffMgr");window.scrollTo(0,0);}}
+                <button onClick={()=>{setEditStaffId(s.id);setNewStaffName(s.name);setNewStaffHomes(s.homeIds);setNewStaffRole(s.role);setAdminTab("staffMgr");window.scrollTo(0,0);}}
                   style={{ background:C.bluePale, border:"none", borderRadius:8, padding:"6px 12px", color:C.blue, fontWeight:700, fontSize:".78rem", cursor:"pointer", marginRight:6 }}>編集</button>
                 <button onClick={()=>deleteStaff(s.id)}
                   style={{ background:C.dangerPale, border:"none", borderRadius:8, padding:"6px 12px", color:C.danger, fontWeight:700, fontSize:".78rem", cursor:"pointer" }}>削除</button>
