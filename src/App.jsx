@@ -93,7 +93,7 @@ export default function App() {
   const [punches, setPunches] = useState([]); // {id, staffId, date, type, ts, time}
   const [leaves, setLeaves]   = useState([]); // {id, staffId, staffName, start, end, days, reason, type, status, appliedAt}
 
-  const [screen, setScreen] = useState("top"); // top | homeSelect | pwEntry | staffSelect | staffHome | adminPw | adminHome
+  const [screen, setScreen] = useState("top"); // top | homeSelect | pwEntry | staffHome | adminPw | adminHome
   const [mode, setMode]     = useState(null);  // "staff" | "admin"
   const [selectedHome, setSelectedHome] = useState(null);
   const [selectedStaff, setSelectedStaff] = useState(null);
@@ -305,7 +305,7 @@ export default function App() {
     </div>
   );
 
-  // ── パスワード入力 ──
+  // ── 名前入力 ──
   if (screen === "pwEntry") return (
     <div style={S.page}>
       <FeedbackBar />
@@ -314,52 +314,25 @@ export default function App() {
       </div>
       <div style={{ padding:"8px 24px 0", textAlign:"center" }}>
         <div style={{ fontWeight:800, fontSize:"1.15rem", marginBottom:4 }}>{selectedHome?.name}</div>
-        <div style={{ color:C.muted, fontSize:".85rem", marginBottom:28 }}>パスワードを入力してください</div>
-        <input type="password" value={pwInput} onChange={e => setPwInput(e.target.value)}
-          onKeyDown={e => e.key === "Enter" && checkPw()}
-          placeholder="パスワード" style={{ ...S.input, textAlign:"center", fontSize:"1.2rem", letterSpacing:".2em" }} />
+        <div style={{ color:C.muted, fontSize:".85rem", marginBottom:28 }}>お名前をフルネームで入力してください</div>
+        <input type="text" value={pwInput} onChange={e => setPwInput(e.target.value)}
+          onKeyDown={e => e.key === "Enter" && checkName()}
+          placeholder="例：山田 花子" style={{ ...S.input, textAlign:"center", fontSize:"1.2rem" }} />
         {pwError && <div style={{ color:C.danger, fontSize:".85rem", marginBottom:10 }}>{pwError}</div>}
-        <button onClick={checkPw} style={S.btn(C.olive, "#fff")}>確認</button>
+        <button onClick={checkName} style={S.btn(C.olive, "#fff")}>開く</button>
       </div>
     </div>
   );
 
-  function checkPw() {
-    if (pwInput === selectedHome?.password) {
-      setPwInput(""); setPwError(""); setScreen("staffSelect");
-    } else { setPwError("パスワードが違います"); }
-  }
-
-  // ── スタッフ選択 ──
-  if (screen === "staffSelect") {
+  function checkName() {
     const homeStaff = staff.filter(s => s.homeId === selectedHome?.id);
-    return (
-      <div style={S.page}>
-        <FeedbackBar />
-        <div style={{ padding:"16px 16px 8px" }}>
-          <button onClick={() => setScreen("homeSelect")} style={{ background:"none", border:"none", color:C.muted, fontSize:".85rem", cursor:"pointer", padding:0 }}>← 戻る</button>
-        </div>
-        <div style={{ textAlign:"center", padding:"8px 0 20px" }}>
-          <div style={{ fontSize:".8rem", color:C.muted }}>{selectedHome?.name}</div>
-          <div style={{ fontWeight:800, fontSize:"1.1rem" }}>自分の名前を選んでください</div>
-        </div>
-        <div style={{ padding:"0 16px 32px" }}>
-          {homeStaff.length === 0 && <div style={{ textAlign:"center", color:C.muted, padding:24 }}>スタッフが登録されていません</div>}
-          {homeStaff.map(s => (
-            <button key={s.id} onClick={() => { setSelectedStaff(s); setStaffTab("punch"); setScreen("staffHome"); }}
-              style={{ ...S.card, width:"100%", border:"none", cursor:"pointer", display:"flex", alignItems:"center", gap:14, padding:"14px 16px", marginBottom:10, textAlign:"left" }}>
-              <div style={{ width:44, height:44, borderRadius:"50%", background:s.color, display:"flex", alignItems:"center", justifyContent:"center", fontWeight:800, fontSize:".9rem", flexShrink:0, color:"#444" }}>
-                {initials(s.name)}
-              </div>
-              <div>
-                <div style={{ fontWeight:700, color:C.blue, fontSize:"1rem" }}>{s.name}</div>
-                <div style={{ fontSize:".78rem", color:C.muted, marginTop:1 }}>{s.role}</div>
-              </div>
-            </button>
-          ))}
-        </div>
-      </div>
-    );
+    const norm = str => str.replace(/\s+/g, "");
+    const match = homeStaff.find(s => norm(s.name) === norm(pwInput));
+    if (match) {
+      setPwInput(""); setPwError(""); setSelectedStaff(match); setStaffTab("punch"); setScreen("staffHome");
+    } else {
+      setPwError("該当する名前が見つかりません。登録されているフルネームを入力してください");
+    }
   }
 
   // ── スタッフ打刻・有給画面 ──
@@ -394,7 +367,7 @@ export default function App() {
               <div style={{ fontSize:".75rem", color:C.muted }}>{dateStr}</div>
             </div>
           </div>
-          <button onClick={() => { setSelectedStaff(null); setScreen("staffSelect"); }}
+          <button onClick={() => { setSelectedStaff(null); setPwInput(""); setPwError(""); setScreen("pwEntry"); }}
             style={{ background:"none", border:`1px solid ${C.border}`, borderRadius:8, padding:"6px 12px", fontSize:".8rem", color:C.muted, cursor:"pointer" }}>
             ログアウト
           </button>
