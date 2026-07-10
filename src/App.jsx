@@ -143,7 +143,7 @@ export default function App() {
   const [punches, setPunches] = useState([]); // {id, staffId, date, type, ts, time}
   const [leaves, setLeaves]   = useState([]); // {id, staffId, staffName, start, end, days, reason, type, status, appliedAt}
 
-  const [screen, setScreen] = useState("top"); // top | homeSelect | pwEntry | staffSelect | staffHome | adminPw | adminHome
+  const [screen, setScreen] = useState("top"); // top | homeSelect | staffSelect | staffHome | adminPw | adminHome
   const [mode, setMode]     = useState(null);  // "staff" | "admin"
   const [selectedHome, setSelectedHome] = useState(null);
   const [selectedStaff, setSelectedStaff] = useState(null);
@@ -341,7 +341,7 @@ export default function App() {
       <div style={{ textAlign:"center", padding:"8px 0 20px", fontWeight:800, fontSize:"1.1rem" }}>ホームを選んでください</div>
       <div style={{ padding:"0 16px 32px" }}>
         {homes.map(h => (
-          <button key={h.id} onClick={() => { setSelectedHome(h); setPwInput(""); setPwError(""); setScreen("pwEntry"); }}
+          <button key={h.id} onClick={() => { setSelectedHome(h); setScreen("staffSelect"); }}
             style={{ ...S.card, width:"100%", border:"none", cursor:"pointer", display:"flex", justifyContent:"space-between", alignItems:"center", padding:"16px 18px", marginBottom:10, textAlign:"left" }}>
             <div>
               <div style={{ fontSize:".72rem", color:C.muted, letterSpacing:".1em", marginBottom:2 }}>{h.area}</div>
@@ -353,31 +353,6 @@ export default function App() {
       </div>
     </div>
   );
-
-  // ── パスワード入力 ──
-  if (screen === "pwEntry") return (
-    <div style={S.page}>
-      <FeedbackBar />
-      <div style={{ padding:"16px 16px 8px" }}>
-        <button onClick={() => setScreen("homeSelect")} style={{ background:"none", border:"none", color:C.muted, fontSize:".85rem", cursor:"pointer", padding:0 }}>← 戻る</button>
-      </div>
-      <div style={{ padding:"8px 24px 0", textAlign:"center" }}>
-        <div style={{ fontWeight:800, fontSize:"1.15rem", marginBottom:4 }}>{selectedHome?.name}</div>
-        <div style={{ color:C.muted, fontSize:".85rem", marginBottom:28 }}>パスワードを入力してください</div>
-        <input type="password" value={pwInput} onChange={e => setPwInput(e.target.value)}
-          onKeyDown={e => e.key === "Enter" && checkPw()}
-          placeholder="パスワード" style={{ ...S.input, textAlign:"center", fontSize:"1.2rem", letterSpacing:".2em" }} />
-        {pwError && <div style={{ color:C.danger, fontSize:".85rem", marginBottom:10 }}>{pwError}</div>}
-        <button onClick={checkPw} style={S.btn(C.olive, "#fff")}>確認</button>
-      </div>
-    </div>
-  );
-
-  function checkPw() {
-    if (pwInput === selectedHome?.password) {
-      setPwInput(""); setPwError(""); setScreen("staffSelect");
-    } else { setPwError("パスワードが違います"); }
-  }
 
   // ── スタッフ選択 ──
   if (screen === "staffSelect") {
@@ -415,7 +390,6 @@ export default function App() {
   if (screen === "staffHome" && selectedStaff) {
     const recs = todayPunches(selectedStaff.id).sort((a,b) => b.ts - a.ts);
     const status = currentStatus(selectedStaff.id);
-    const workMin = calcWorkMin(todayPunches(selectedStaff.id));
     const inRec = recs.find(r => r.type === "出勤");
     const outRec = recs.find(r => r.type === "退勤");
     const myLeaves = leaves.filter(l => l.staffId === selectedStaff.id);
@@ -480,13 +454,9 @@ export default function App() {
                 <span style={{ fontSize:".82rem", color:C.muted }}>出勤時刻</span>
                 <span style={{ fontWeight:700 }}>{inRec?.time || "-"}</span>
               </div>
-              <div style={{ ...S.row, marginBottom:6 }}>
+              <div style={S.row}>
                 <span style={{ fontSize:".82rem", color:C.muted }}>退勤時刻</span>
                 <span style={{ fontWeight:700 }}>{outRec?.time || "-"}</span>
-              </div>
-              <div style={S.row}>
-                <span style={{ fontSize:".82rem", color:C.muted }}>実働時間</span>
-                <span style={{ fontWeight:700 }}>{fmtWorkTime(workMin)}</span>
               </div>
             </div>
 
