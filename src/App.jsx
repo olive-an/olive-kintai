@@ -972,6 +972,7 @@ export default function App() {
                 const reportHomeName = homes.find(h => h.id === reportHome)?.name;
                 const nDays = daysInMonth(reportMonth);
                 const days = Array.from({ length: nDays }, (_, i) => i + 1);
+                const [ry, rm] = reportMonth.split("-").map(Number);
                 const monthPunches = reportPunches.filter(p => String(p.date).slice(0, 7) === reportMonth);
                 const cellFor = (staffId, day) => {
                   const dateStr2 = `${reportMonth}-${pad(day)}`;
@@ -986,23 +987,27 @@ export default function App() {
                     <table style={{ borderCollapse:"collapse", fontSize:".72rem", whiteSpace:"nowrap" }}>
                       <thead>
                         <tr>
-                          <th style={{ position:"sticky", left:0, background:C.card, padding:"6px 10px", textAlign:"left", borderBottom:`2px solid ${C.border}` }}>氏名</th>
-                          {days.map(d => (
-                            <th key={d} style={{ padding:"6px 8px", borderBottom:`2px solid ${C.border}`, fontWeight:700, color:C.muted }}>{d}</th>
+                          <th style={{ position:"sticky", left:0, background:C.card, padding:"6px 10px", textAlign:"left", borderBottom:`2px solid ${C.border}` }}>日付</th>
+                          {reportStaff.map(s => (
+                            <th key={s.id} style={{ padding:"6px 8px", borderBottom:`2px solid ${C.border}`, fontWeight:700, color:C.muted }}>{s.name}</th>
                           ))}
                         </tr>
                       </thead>
                       <tbody>
-                        {reportStaff.map(s => (
-                          <tr key={s.id}>
-                            <td style={{ position:"sticky", left:0, background:C.card, padding:"6px 10px", fontWeight:700, borderBottom:`1px solid ${C.border}` }}>{s.name}</td>
-                            {days.map(d => (
-                              <td key={d} style={{ padding:"6px 8px", borderBottom:`1px solid ${C.border}`, textAlign:"center", color:C.muted }}>{cellFor(s.id, d)}</td>
-                            ))}
-                          </tr>
-                        ))}
+                        {days.map(d => {
+                          const wd = WEEKDAY[new Date(ry, rm - 1, d).getDay()];
+                          return (
+                            <tr key={d}>
+                              <td style={{ position:"sticky", left:0, background:C.card, padding:"6px 10px", fontWeight:700, borderBottom:`1px solid ${C.border}`,
+                                color: wd==="日"?C.danger:wd==="土"?C.blue:C.text }}>{d}　{wd}</td>
+                              {reportStaff.map(s => (
+                                <td key={s.id} style={{ padding:"6px 8px", borderBottom:`1px solid ${C.border}`, textAlign:"center", color:C.muted }}>{cellFor(s.id, d)}</td>
+                              ))}
+                            </tr>
+                          );
+                        })}
                         {reportStaff.length === 0 && (
-                          <tr><td colSpan={nDays+1} style={{ padding:20, textAlign:"center", color:C.muted }}>該当するスタッフがいません</td></tr>
+                          <tr><td colSpan={1} style={{ padding:20, textAlign:"center", color:C.muted }}>該当するスタッフがいません</td></tr>
                         )}
                       </tbody>
                     </table>
