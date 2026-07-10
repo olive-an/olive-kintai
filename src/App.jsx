@@ -396,20 +396,12 @@ export default function App() {
       <div style={{ fontSize:"1.4rem", fontWeight:800, marginBottom:4, color:"#ffffff" }}>勤怠管理</div>
       <div style={{ fontSize:".85rem", color:"rgba(255,255,255,.6)", marginBottom:36 }}>おりーぶ庵株式会社</div>
       <div style={{ width:"100%", maxWidth:380 }}>
-        <button onClick={() => { setMode("staff"); setScreen("homeSelect"); requestNotificationPermission(); }}
-          style={{ ...S.btn(C.card, C.olive, `2px solid ${C.olive}`), marginBottom:12, display:"flex", alignItems:"center", gap:12, padding:"18px 20px" }}>
-          <div style={{ width:40, height:40, borderRadius:"50%", background:C.olivePale, display:"flex", alignItems:"center", justifyContent:"center", fontSize:"1.2rem" }}>👤</div>
-          <div style={{ textAlign:"left" }}>
-            <div style={{ fontWeight:800, color:C.olive }}>従業員モード</div>
-            <div style={{ fontSize:".78rem", color:C.muted, fontWeight:400, marginTop:2 }}>打刻・有給申請はこちら</div>
-          </div>
-        </button>
         <button onClick={() => { setMode("staff"); setScreen("qrScan"); }}
-          style={{ ...S.btn("rgba(255,255,255,.1)", "#fff", "1px solid rgba(255,255,255,.3)"), marginBottom:0, display:"flex", alignItems:"center", gap:12, padding:"18px 20px" }}>
-          <div style={{ width:40, height:40, borderRadius:"50%", background:"rgba(255,255,255,.15)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:"1.2rem" }}>📷</div>
+          style={{ ...S.btn(C.card, C.olive, `2px solid ${C.olive}`), marginBottom:0, display:"flex", alignItems:"center", gap:12, padding:"18px 20px" }}>
+          <div style={{ width:40, height:40, borderRadius:"50%", background:C.olivePale, display:"flex", alignItems:"center", justifyContent:"center", fontSize:"1.2rem" }}>📷</div>
           <div style={{ textAlign:"left" }}>
-            <div style={{ fontWeight:800 }}>QRコードを読み取る</div>
-            <div style={{ fontSize:".78rem", color:"rgba(255,255,255,.6)", fontWeight:400, marginTop:2 }}>ホーム・個人のQRコードで直接打刻</div>
+            <div style={{ fontWeight:800, color:C.olive }}>勤怠</div>
+            <div style={{ fontSize:".78rem", color:C.muted, fontWeight:400, marginTop:2 }}>QRコードを読み取って打刻・有給申請</div>
           </div>
         </button>
       </div>
@@ -516,20 +508,14 @@ export default function App() {
       <div style={S.page}>
         <FeedbackBar />
         {/* ヘッダー */}
-        <div style={{ padding:"16px 16px 12px", display:"flex", justifyContent:"space-between", alignItems:"flex-start" }}>
-          <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-            <div style={{ width:38, height:38, borderRadius:"50%", background:selectedStaff.color, display:"flex", alignItems:"center", justifyContent:"center", fontWeight:800, fontSize:".85rem", color:"#444" }}>
-              {initials(selectedStaff.name)}
-            </div>
-            <div>
-              <div style={{ fontWeight:800, fontSize:"1rem" }}>{selectedStaff.name}</div>
-              <div style={{ fontSize:".75rem", color:C.muted }}>{dateStr}</div>
-            </div>
+        <div style={{ padding:"16px 16px 12px", display:"flex", alignItems:"center", gap:10 }}>
+          <div style={{ width:38, height:38, borderRadius:"50%", background:selectedStaff.color, display:"flex", alignItems:"center", justifyContent:"center", fontWeight:800, fontSize:".85rem", color:"#444" }}>
+            {initials(selectedStaff.name)}
           </div>
-          <button onClick={() => { setSelectedStaff(null); setScreen("staffSelect"); }}
-            style={{ background:"none", border:`1px solid ${C.border}`, borderRadius:8, padding:"6px 12px", fontSize:".8rem", color:C.muted, cursor:"pointer" }}>
-            ログアウト
-          </button>
+          <div>
+            <div style={{ fontWeight:800, fontSize:"1rem" }}>{selectedStaff.name}</div>
+            <div style={{ fontSize:".75rem", color:C.muted }}>{dateStr}</div>
+          </div>
         </div>
 
         {/* タブ */}
