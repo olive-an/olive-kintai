@@ -442,7 +442,7 @@ export default function App() {
       <div style={{ textAlign:"center", padding:"8px 0 20px", fontWeight:800, fontSize:"1.1rem" }}>ホームを選んでください</div>
       <div style={{ padding:"0 16px 32px" }}>
         {homes.map(h => (
-          <button key={h.id} onClick={() => { setSelectedHome(h); setScreen("staffSelect"); }}
+          <button key={h.id} onClick={() => { setSelectedHome(h); setPwInput(""); setPwError(""); setScreen("staffSelect"); }}
             style={{ ...S.card, width:"100%", border:"none", cursor:"pointer", display:"flex", justifyContent:"space-between", alignItems:"center", padding:"16px 18px", marginBottom:10, textAlign:"left" }}>
             <div>
               <div style={{ fontSize:".72rem", color:C.muted, letterSpacing:".1em", marginBottom:2 }}>{h.area}</div>
@@ -455,33 +455,33 @@ export default function App() {
     </div>
   );
 
-  // ── スタッフ選択 ──
-  if (screen === "staffSelect") {
+  function checkStaffName() {
     const homeStaff = staff.filter(s => s.homeIds.includes(selectedHome?.id));
+    const norm = str => str.replace(/\s+/g, "");
+    const match = homeStaff.find(s => norm(s.name) === norm(pwInput));
+    if (match) {
+      setPwInput(""); setPwError(""); setSelectedStaff(match); setStaffTab("punch"); setScreen("staffHome");
+    } else {
+      setPwError("該当する名前が見つかりません。登録されているフルネームを入力してください");
+    }
+  }
+
+  // ── スタッフ選択（氏名入力） ──
+  if (screen === "staffSelect") {
     return (
       <div style={S.page}>
         <FeedbackBar />
         <div style={{ padding:"16px 16px 8px" }}>
           <button onClick={() => setScreen("homeSelect")} style={{ background:"none", border:"none", color:C.muted, fontSize:".85rem", cursor:"pointer", padding:0 }}>← 戻る</button>
         </div>
-        <div style={{ textAlign:"center", padding:"8px 0 20px" }}>
-          <div style={{ fontSize:".8rem", color:C.muted }}>{selectedHome?.name}</div>
-          <div style={{ fontWeight:800, fontSize:"1.1rem" }}>自分の名前を選んでください</div>
-        </div>
-        <div style={{ padding:"0 16px 32px" }}>
-          {homeStaff.length === 0 && <div style={{ textAlign:"center", color:C.muted, padding:24 }}>スタッフが登録されていません</div>}
-          {homeStaff.map(s => (
-            <button key={s.id} onClick={() => { setSelectedStaff(s); setStaffTab("punch"); setScreen("staffHome"); }}
-              style={{ ...S.card, width:"100%", border:"none", cursor:"pointer", display:"flex", alignItems:"center", gap:14, padding:"14px 16px", marginBottom:10, textAlign:"left" }}>
-              <div style={{ width:44, height:44, borderRadius:"50%", background:s.color, display:"flex", alignItems:"center", justifyContent:"center", fontWeight:800, fontSize:".9rem", flexShrink:0, color:"#444" }}>
-                {initials(s.name)}
-              </div>
-              <div>
-                <div style={{ fontWeight:700, color:C.blue, fontSize:"1rem" }}>{s.name}</div>
-                <div style={{ fontSize:".78rem", color:C.muted, marginTop:1 }}>{s.role}</div>
-              </div>
-            </button>
-          ))}
+        <div style={{ padding:"8px 24px 0", textAlign:"center" }}>
+          <div style={{ fontSize:".8rem", color:C.muted, marginBottom:4 }}>{selectedHome?.name}</div>
+          <div style={{ fontWeight:800, fontSize:"1.15rem", marginBottom:28 }}>お名前をフルネームで入力してください</div>
+          <input type="text" value={pwInput} onChange={e => setPwInput(e.target.value)}
+            onKeyDown={e => e.key === "Enter" && checkStaffName()}
+            placeholder="例：山田 花子" style={{ ...S.input, textAlign:"center", fontSize:"1.2rem" }} />
+          {pwError && <div style={{ color:C.danger, fontSize:".85rem", marginBottom:10 }}>{pwError}</div>}
+          <button onClick={checkStaffName} style={S.btn(C.olive, "#fff")}>開く</button>
         </div>
       </div>
     );
