@@ -157,6 +157,7 @@ export default function App() {
   const [feedback, setFeedback] = useState(null);
   const [dismissedNotifIds, setDismissedNotifIds] = useState([]);
   const [qrStaffId, setQrStaffId] = useState(null);
+  const [qrHomeId, setQrHomeId] = useState(null);
 
   // スタッフ管理フォーム
   const [newStaffName, setNewStaffName]   = useState("");
@@ -177,12 +178,23 @@ export default function App() {
   const [adminPwLocal, setAdminPwLocal]   = useState(ADMIN_PASSWORD);
 
   useEffect(() => {
-    const staffId = Number(new URLSearchParams(window.location.search).get("staff"));
-    if (!staffId) return;
-    const match = staff.find(s => s.id === staffId);
-    if (match) {
-      setSelectedStaff(match); setStaffTab("punch"); setMode("staff"); setScreen("staffHome");
-      requestNotificationPermission();
+    const params = new URLSearchParams(window.location.search);
+    const staffId = Number(params.get("staff"));
+    const homeId = params.get("home");
+    if (staffId) {
+      const match = staff.find(s => s.id === staffId);
+      if (match) {
+        setSelectedStaff(match); setStaffTab("punch"); setMode("staff"); setScreen("staffHome");
+        requestNotificationPermission();
+        return;
+      }
+    }
+    if (homeId) {
+      const match = homes.find(h => h.id === homeId);
+      if (match) {
+        setSelectedHome(match); setMode("staff"); setScreen("staffSelect");
+        requestNotificationPermission();
+      }
     }
   }, []);
 
@@ -805,6 +817,31 @@ export default function App() {
         {/* 設定タブ */}
         {adminTab === "settings" && (
           <div style={{ padding:"12px 16px 32px" }}>
+            <div style={S.card}>
+              <div style={{ fontWeight:700, marginBottom:12 }}>ホームQRコード</div>
+              <div style={{ fontSize:".78rem", color:C.muted, marginBottom:14 }}>各ホームの入口に掲示すると、スタッフはスマホでQRコードを読み取るだけでそのホームの名前選択画面を直接開けます。</div>
+              {homes.map(h => {
+                const qrUrl = `${window.location.origin}${window.location.pathname}?home=${h.id}`;
+                return (
+                  <div key={h.id} style={{ marginBottom:10, paddingBottom:10, borderBottom:`1px solid ${C.border}` }}>
+                    <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+                      <span style={{ fontWeight:700, fontSize:".92rem" }}>{h.name}</span>
+                      <button onClick={()=>setQrHomeId(qrHomeId===h.id?null:h.id)}
+                        style={{ background:C.olivePale, border:"none", borderRadius:8, padding:"6px 12px", color:C.olive, fontWeight:700, fontSize:".78rem", cursor:"pointer" }}>QR</button>
+                    </div>
+                    {qrHomeId === h.id && (
+                      <div style={{ marginTop:12, textAlign:"center" }}>
+                        <img src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qrUrl)}`}
+                          alt={`${h.name}のQRコード`} style={{ width:180, height:180, borderRadius:8 }} />
+                        <div style={{ fontSize:".72rem", color:C.muted, marginTop:8, wordBreak:"break-all" }}>{qrUrl}</div>
+                        <button onClick={()=>{ navigator.clipboard?.writeText(qrUrl); setFeedback({ msg:"リンクをコピーしました", ok:true }); }}
+                          style={{ marginTop:10, background:"none", border:`1px solid ${C.border}`, borderRadius:8, padding:"6px 14px", color:C.muted, fontWeight:700, fontSize:".78rem", cursor:"pointer" }}>リンクをコピー</button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
             <div style={S.card}>
               <div style={{ fontWeight:700, marginBottom:12 }}>ホームパスワード変更</div>
               <div style={{ fontSize:".78rem", color:C.muted, marginBottom:6 }}>ホームを選択</div>
