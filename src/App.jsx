@@ -156,6 +156,7 @@ export default function App() {
   const [dateStr, setDateStr]   = useState("");
   const [feedback, setFeedback] = useState(null);
   const [dismissedNotifIds, setDismissedNotifIds] = useState([]);
+  const [qrStaffId, setQrStaffId] = useState(null);
 
   // スタッフ管理フォーム
   const [newStaffName, setNewStaffName]   = useState("");
@@ -174,6 +175,16 @@ export default function App() {
   const [newPw, setNewPw]                 = useState("");
   const [newAdminPw, setNewAdminPw]       = useState("");
   const [adminPwLocal, setAdminPwLocal]   = useState(ADMIN_PASSWORD);
+
+  useEffect(() => {
+    const staffId = Number(new URLSearchParams(window.location.search).get("staff"));
+    if (!staffId) return;
+    const match = staff.find(s => s.id === staffId);
+    if (match) {
+      setSelectedStaff(match); setStaffTab("punch"); setMode("staff"); setScreen("staffHome");
+      requestNotificationPermission();
+    }
+  }, []);
 
   useEffect(() => {
     const tick = () => {
@@ -757,21 +768,37 @@ export default function App() {
                 style={S.btn("#fff",C.muted,`2px solid ${C.border}`)}>キャンセル</button>}
             </div>
             <div style={{ fontWeight:700, fontSize:".9rem", marginBottom:8 }}>登録スタッフ一覧</div>
-            {staff.map(s => (
-              <div key={s.id} style={{ ...S.card, display:"flex", alignItems:"center", gap:10, padding:"12px 14px" }}>
-                <div style={{ width:38, height:38, borderRadius:"50%", background:s.color, display:"flex", alignItems:"center", justifyContent:"center", fontWeight:800, fontSize:".82rem", color:"#444", flexShrink:0 }}>
-                  {initials(s.name)}
+            {staff.map(s => {
+              const qrUrl = `${window.location.origin}${window.location.pathname}?staff=${s.id}`;
+              return (
+              <div key={s.id} style={S.card}>
+                <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+                  <div style={{ width:38, height:38, borderRadius:"50%", background:s.color, display:"flex", alignItems:"center", justifyContent:"center", fontWeight:800, fontSize:".82rem", color:"#444", flexShrink:0 }}>
+                    {initials(s.name)}
+                  </div>
+                  <div style={{ flex:1 }}>
+                    <div style={{ fontWeight:700, fontSize:".92rem" }}>{s.name}</div>
+                    <div style={{ fontSize:".73rem", color:C.muted }}>{s.homeIds.map(id=>homes.find(h=>h.id===id)?.name).filter(Boolean).join("・")}　{s.role}</div>
+                  </div>
+                  <button onClick={()=>setQrStaffId(qrStaffId===s.id?null:s.id)}
+                    style={{ background:C.olivePale, border:"none", borderRadius:8, padding:"6px 12px", color:C.olive, fontWeight:700, fontSize:".78rem", cursor:"pointer", marginRight:6 }}>QR</button>
+                  <button onClick={()=>{setEditStaffId(s.id);setNewStaffName(s.name);setNewStaffHomes(s.homeIds);setNewStaffRole(s.role);setAdminTab("staffMgr");window.scrollTo(0,0);}}
+                    style={{ background:C.bluePale, border:"none", borderRadius:8, padding:"6px 12px", color:C.blue, fontWeight:700, fontSize:".78rem", cursor:"pointer", marginRight:6 }}>編集</button>
+                  <button onClick={()=>deleteStaff(s.id)}
+                    style={{ background:C.dangerPale, border:"none", borderRadius:8, padding:"6px 12px", color:C.danger, fontWeight:700, fontSize:".78rem", cursor:"pointer" }}>削除</button>
                 </div>
-                <div style={{ flex:1 }}>
-                  <div style={{ fontWeight:700, fontSize:".92rem" }}>{s.name}</div>
-                  <div style={{ fontSize:".73rem", color:C.muted }}>{s.homeIds.map(id=>homes.find(h=>h.id===id)?.name).filter(Boolean).join("・")}　{s.role}</div>
-                </div>
-                <button onClick={()=>{setEditStaffId(s.id);setNewStaffName(s.name);setNewStaffHomes(s.homeIds);setNewStaffRole(s.role);setAdminTab("staffMgr");window.scrollTo(0,0);}}
-                  style={{ background:C.bluePale, border:"none", borderRadius:8, padding:"6px 12px", color:C.blue, fontWeight:700, fontSize:".78rem", cursor:"pointer", marginRight:6 }}>編集</button>
-                <button onClick={()=>deleteStaff(s.id)}
-                  style={{ background:C.dangerPale, border:"none", borderRadius:8, padding:"6px 12px", color:C.danger, fontWeight:700, fontSize:".78rem", cursor:"pointer" }}>削除</button>
+                {qrStaffId === s.id && (
+                  <div style={{ marginTop:14, paddingTop:14, borderTop:`1px solid ${C.border}`, textAlign:"center" }}>
+                    <img src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qrUrl)}`}
+                      alt={`${s.name}の打刻QRコード`} style={{ width:180, height:180, borderRadius:8 }} />
+                    <div style={{ fontSize:".72rem", color:C.muted, marginTop:8, wordBreak:"break-all" }}>{qrUrl}</div>
+                    <button onClick={()=>{ navigator.clipboard?.writeText(qrUrl); setFeedback({ msg:"リンクをコピーしました", ok:true }); }}
+                      style={{ marginTop:10, background:"none", border:`1px solid ${C.border}`, borderRadius:8, padding:"6px 14px", color:C.muted, fontWeight:700, fontSize:".78rem", cursor:"pointer" }}>リンクをコピー</button>
+                  </div>
+                )}
               </div>
-            ))}
+              );
+            })}
           </div>
         )}
 
