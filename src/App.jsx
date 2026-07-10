@@ -548,9 +548,10 @@ export default function App() {
         {staffTab === "punch" && (
           <div style={{ padding:"12px 16px 32px" }}>
             {/* 時計 */}
-            <div style={{ ...S.card, textAlign:"center", padding:"20px 16px" }}>
-              <div style={{ fontSize:"2.4rem", fontWeight:200, letterSpacing:".1em", fontVariantNumeric:"tabular-nums" }}>{clock}</div>
-              <div style={{ fontSize:".82rem", color:C.muted, marginTop:4 }}>{dateStr}</div>
+            <div style={{ borderRadius:16, padding:"22px 16px", marginBottom:12, textAlign:"center",
+              background:"linear-gradient(135deg, #1f5c66, #2f90a8)", color:"#fff", boxShadow:"0 4px 16px rgba(31,92,102,.3)" }}>
+              <div style={{ fontSize:".85rem", opacity:.85, marginBottom:6 }}>{dateStr}</div>
+              <div style={{ fontSize:"2.3rem", fontWeight:700, letterSpacing:".04em", fontVariantNumeric:"tabular-nums" }}>{clock}</div>
             </div>
 
             {/* 状態カード */}
@@ -572,14 +573,16 @@ export default function App() {
             {/* 打刻ボタン */}
             <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:4 }}>
               {[
-                ["出勤", canIn,  C.olivePale2, C.olive],
-                ["退勤", canOut, "#fde8e8",    C.danger],
-              ].map(([label, enabled, bg, color]) => (
+                ["出勤", "🕐", canIn,  C.olive],
+                ["退勤", "🚶", canOut, C.danger],
+              ].map(([label, icon, enabled, color]) => (
                 <button key={label} onClick={() => enabled && punch(label)}
-                  style={{ padding:"18px 10px", borderRadius:12, border:"none", background:bg,
-                    color: enabled ? color : "#bbb", fontWeight:800, fontSize:"1rem", cursor: enabled ? "pointer":"not-allowed",
-                    opacity: enabled ? 1 : 0.5 }}>
-                  {label}
+                  style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:8, padding:"20px 10px", borderRadius:14,
+                    border:`1px solid ${enabled ? color+"33" : C.border}`, background:C.card,
+                    color: enabled ? color : "#bbb", cursor: enabled ? "pointer":"not-allowed",
+                    opacity: enabled ? 1 : 0.5, boxShadow:"0 1px 4px rgba(0,0,0,.06)" }}>
+                  <span style={{ fontSize:"1.7rem", lineHeight:1 }}>{icon}</span>
+                  <span style={{ fontWeight:800, fontSize:".95rem" }}>{label}</span>
                 </button>
               ))}
             </div>
