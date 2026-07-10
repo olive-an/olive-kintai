@@ -308,7 +308,7 @@ export default function App() {
       <FeedbackBar />
       <div style={{ marginBottom:20, textAlign:"center" }}>
         <div style={{ display:"inline-flex", background:"#ffffff", borderRadius:24, padding:"18px 32px", boxShadow:"0 4px 20px rgba(0,0,0,.25)" }}>
-          <img src="/logo.png" alt="Olive庵" style={{ height:72, width:"auto", display:"block" }} />
+          <img src={`${process.env.PUBLIC_URL}/logo.png`} alt="Olive庵" style={{ height:72, width:"auto", display:"block" }} />
         </div>
       </div>
       <div style={{ fontSize:"1.4rem", fontWeight:800, marginBottom:4, color:"#ffffff" }}>勤怠管理</div>
