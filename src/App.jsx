@@ -147,7 +147,7 @@ export default function App() {
   const [punches, setPunches] = useState([]); // {id, staffId, date, type, ts, time}
   const [leaves, setLeaves]   = useState([]); // {id, staffId, staffName, start, end, days, reason, type, status, appliedAt}
 
-  const [screen, setScreen] = useState("top"); // top | qrScan | homeSelect | staffSelect | staffHome | adminPw | adminHome
+  const [screen, setScreen] = useState("top"); // top | qrScan | homeSelect | homePick | staffSelect | staffHome | adminPw | adminHome
   const [mode, setMode]     = useState(null);  // "staff" | "admin"
   const [selectedHome, setSelectedHome] = useState(null);
   const [selectedStaff, setSelectedStaff] = useState(null);
@@ -198,8 +198,15 @@ export default function App() {
     if (staffId) {
       const match = staff.find(s => s.id === staffId);
       if (match) {
-        setSelectedStaff(match); setStaffTab("punch"); setMode("staff"); setScreen("staffHome");
+        setSelectedStaff(match); setStaffTab("punch"); setMode("staff");
         requestNotificationPermission();
+        if (match.homeIds.length <= 1) {
+          setSelectedHome(homes.find(h => h.id === match.homeIds[0]) || null);
+          setScreen("staffHome");
+        } else {
+          setSelectedHome(null);
+          setScreen("homePick");
+        }
         return true;
       }
     }
@@ -302,7 +309,7 @@ export default function App() {
   function punch(type) {
     if (!selectedStaff) return;
     const now = new Date();
-    const rec = { id: Date.now(), staffId: selectedStaff.id, date: TODAY(), type, ts: now.getTime(), time: fmtTimeShort(now) };
+    const rec = { id: Date.now(), staffId: selectedStaff.id, date: TODAY(), type, ts: now.getTime(), time: fmtTimeShort(now), home: selectedHome?.name || "" };
     setPunches(prev => [...prev, rec]);
     setFeedback({ msg: `${type}しました　${fmtTimeShort(now)}`, ok: true });
     fetch(GAS_URL, {
@@ -456,6 +463,35 @@ export default function App() {
       </div>
     </div>
   );
+
+  // ── 勤務ホーム選択（複数ホーム兼務者） ──
+  if (screen === "homePick" && selectedStaff) {
+    const myHomes = homes.filter(h => selectedStaff.homeIds.includes(h.id));
+    return (
+      <div style={S.page}>
+        <FeedbackBar />
+        <div style={{ padding:"16px 16px 8px" }}>
+          <button onClick={() => setScreen("top")} style={{ background:"none", border:"none", color:C.muted, fontSize:".85rem", cursor:"pointer", padding:0 }}>← 戻る</button>
+        </div>
+        <div style={{ textAlign:"center", padding:"8px 0 20px" }}>
+          <div style={{ fontSize:".8rem", color:C.muted }}>{selectedStaff.name}</div>
+          <div style={{ fontWeight:800, fontSize:"1.1rem" }}>今日はどのホームで勤務しますか？</div>
+        </div>
+        <div style={{ padding:"0 16px 32px" }}>
+          {myHomes.map(h => (
+            <button key={h.id} onClick={() => { setSelectedHome(h); setScreen("staffHome"); }}
+              style={{ ...S.card, width:"100%", border:"none", cursor:"pointer", display:"flex", justifyContent:"space-between", alignItems:"center", padding:"16px 18px", marginBottom:10, textAlign:"left" }}>
+              <div>
+                <div style={{ fontSize:".72rem", color:C.muted, letterSpacing:".1em", marginBottom:2 }}>{h.area}</div>
+                <div style={{ fontWeight:800, fontSize:"1.05rem", color:C.olive }}>{h.name}</div>
+              </div>
+              <span style={{ color:C.border, fontSize:"1.2rem" }}>›</span>
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   // ── ホーム選択 ──
   if (screen === "homeSelect") return (
@@ -933,12 +969,13 @@ export default function App() {
 
               {!reportError && reportPunches && (() => {
                 const reportStaff = staff.filter(s => !reportHome || s.homeIds.includes(reportHome));
+                const reportHomeName = homes.find(h => h.id === reportHome)?.name;
                 const nDays = daysInMonth(reportMonth);
                 const days = Array.from({ length: nDays }, (_, i) => i + 1);
                 const monthPunches = reportPunches.filter(p => String(p.date).slice(0, 7) === reportMonth);
                 const cellFor = (staffId, day) => {
                   const dateStr2 = `${reportMonth}-${pad(day)}`;
-                  const recs = monthPunches.filter(p => String(p.staffId) === String(staffId) && p.date === dateStr2);
+                  const recs = monthPunches.filter(p => String(p.staffId) === String(staffId) && p.date === dateStr2 && (!reportHomeName || p.home === reportHomeName));
                   const inRec = recs.find(p => p.type === "出勤");
                   const outRec = [...recs].reverse().find(p => p.type === "退勤");
                   if (!inRec && !outRec) return "-";
