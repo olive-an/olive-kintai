@@ -12,7 +12,7 @@ const INITIAL_HOMES = [
   { id: "honsha",      name: "本社",           area: "西淀川区", password: "olive0" },
 ];
 
-const ADMIN_PASSWORD = "admin2026";
+const ADMIN_PASSWORD = "123456";
 
 const INITIAL_STAFF = [
   { id: 1, name: "畠　博思", homeIds: ["honsha"], role: "会長・管理者・サービス管理責任者", color: "#a8c4e0" },
