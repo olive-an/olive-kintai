@@ -456,9 +456,8 @@ export default function App() {
   );
 
   function checkStaffName() {
-    const homeStaff = staff.filter(s => s.homeIds.includes(selectedHome?.id));
     const norm = str => str.replace(/\s+/g, "");
-    const match = homeStaff.find(s => norm(s.name) === norm(pwInput));
+    const match = staff.find(s => norm(s.name) === norm(pwInput));
     if (match) {
       setPwInput(""); setPwError(""); setSelectedStaff(match); setStaffTab("punch"); setScreen("staffHome");
     } else {
