@@ -14,6 +14,8 @@ const INITIAL_HOMES = [
 
 const ADMIN_PASSWORD = "123456";
 
+const GAS_URL = "https://script.google.com/macros/s/AKfycbzAFYeylltCfitJvvpS8LrWtK5ZR0oErdZg_iiBODObUFuocxi_XpxgOzE7GNEPgbGz/exec";
+
 const INITIAL_STAFF = [
   { id: 1, name: "畠　博思", homeIds: ["honsha"], role: "会長・管理者・サービス管理責任者", color: "#a8c4e0" },
   { id: 2, name: "高崎　忍", homeIds: ["honsha"], role: "代表取締役", color: "#f4b8c1" },
@@ -79,6 +81,7 @@ const fmtTime = d => `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSec
 const fmtTimeShort = d => `${pad(d.getHours())}:${pad(d.getMinutes())}`;
 const WEEKDAY = ["日","月","火","水","木","金","土"];
 const TODAY = () => fmtDate(new Date());
+const daysInMonth = ym => { const [y, m] = ym.split("-").map(Number); return new Date(y, m, 0).getDate(); };
 
 function initials(name) {
   const parts = name.replace(/\s+/g,"");
@@ -149,7 +152,12 @@ export default function App() {
   const [selectedHome, setSelectedHome] = useState(null);
   const [selectedStaff, setSelectedStaff] = useState(null);
   const [staffTab, setStaffTab] = useState("punch"); // punch | leave
-  const [adminTab, setAdminTab] = useState("status"); // status | leave | staffMgr | settings
+  const [adminTab, setAdminTab] = useState("status"); // status | leave | staffMgr | report | settings
+  const [reportHome, setReportHome] = useState(INITIAL_HOMES[0]?.id || "");
+  const [reportMonth, setReportMonth] = useState(TODAY().slice(0, 7));
+  const [reportPunches, setReportPunches] = useState(null);
+  const [reportLoading, setReportLoading] = useState(false);
+  const [reportError, setReportError] = useState("");
 
   const [pwInput, setPwInput]   = useState("");
   const [pwError, setPwError]   = useState("");
@@ -272,6 +280,10 @@ export default function App() {
     return () => clearTimeout(id);
   }, [feedback]);
 
+  useEffect(() => {
+    if (adminTab === "report" && reportPunches === null) loadReportPunches();
+  }, [adminTab]);
+
   // 今日のスタッフの打刻
   const todayPunches = (staffId) => punches.filter(p => p.staffId === staffId && p.date === TODAY());
 
@@ -293,6 +305,19 @@ export default function App() {
     const rec = { id: Date.now(), staffId: selectedStaff.id, date: TODAY(), type, ts: now.getTime(), time: fmtTimeShort(now) };
     setPunches(prev => [...prev, rec]);
     setFeedback({ msg: `${type}しました　${fmtTimeShort(now)}`, ok: true });
+    fetch(GAS_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ action: "addPunch", ...rec, staffName: selectedStaff.name }),
+    }).catch(() => {});
+  }
+
+  function loadReportPunches() {
+    setReportLoading(true); setReportError("");
+    fetch(GAS_URL)
+      .then(r => r.json())
+      .then(data => { setReportPunches(data); setReportLoading(false); })
+      .catch(() => { setReportError("読み込みに失敗しました。時間をおいて再度お試しください"); setReportLoading(false); });
   }
 
   function submitLeave() {
@@ -737,7 +762,7 @@ export default function App() {
 
         {/* タブ */}
         <div style={{ display:"flex", background:C.card, borderBottom:`2px solid ${C.border}`, overflowX:"auto" }}>
-          {[["status","勤怠状況"],["leave","有給承認"],["staffMgr","スタッフ管理"],["settings","設定"]].map(([t,l]) => (
+          {[["status","勤怠状況"],["leave","有給承認"],["staffMgr","スタッフ管理"],["report","月次集計"],["settings","設定"]].map(([t,l]) => (
             <button key={t} onClick={() => setAdminTab(t)}
               style={{ flex:1, padding:"12px 8px", border:"none", background:"none", fontWeight:700, fontSize:".82rem", cursor:"pointer", whiteSpace:"nowrap",
                 color: adminTab===t ? "#5560a0" : C.muted,
@@ -885,6 +910,69 @@ export default function App() {
               </div>
               );
             })}
+          </div>
+        )}
+
+        {/* 月次集計タブ */}
+        {adminTab === "report" && (
+          <div style={{ padding:"12px 16px 32px" }}>
+            <div style={S.card}>
+              <div style={{ display:"flex", gap:10, marginBottom:14, flexWrap:"wrap" }}>
+                <select value={reportHome} onChange={e=>setReportHome(e.target.value)} style={{ ...S.input, marginBottom:0, flex:1, minWidth:130 }}>
+                  <option value="">全ホーム</option>
+                  {homes.map(h => <option key={h.id} value={h.id}>{h.name}</option>)}
+                </select>
+                <input type="month" value={reportMonth} onChange={e=>setReportMonth(e.target.value)} style={{ ...S.input, marginBottom:0, flex:1, minWidth:130 }} />
+                <button onClick={loadReportPunches} disabled={reportLoading}
+                  style={{ ...S.btn(C.olive, "#fff"), marginBottom:0, width:"auto", padding:"0 20px", opacity:reportLoading?.6:1 }}>
+                  {reportLoading ? "読み込み中..." : "更新"}
+                </button>
+              </div>
+
+              {reportError && <div style={{ color:C.danger, fontSize:".85rem", textAlign:"center", padding:"12px 0" }}>{reportError}</div>}
+
+              {!reportError && reportPunches && (() => {
+                const reportStaff = staff.filter(s => !reportHome || s.homeIds.includes(reportHome));
+                const nDays = daysInMonth(reportMonth);
+                const days = Array.from({ length: nDays }, (_, i) => i + 1);
+                const monthPunches = reportPunches.filter(p => String(p.date).slice(0, 7) === reportMonth);
+                const cellFor = (staffId, day) => {
+                  const dateStr2 = `${reportMonth}-${pad(day)}`;
+                  const recs = monthPunches.filter(p => String(p.staffId) === String(staffId) && p.date === dateStr2);
+                  const inRec = recs.find(p => p.type === "出勤");
+                  const outRec = [...recs].reverse().find(p => p.type === "退勤");
+                  if (!inRec && !outRec) return "-";
+                  return `${inRec?.time || "-"}〜${outRec?.time || "-"}`;
+                };
+                return (
+                  <div style={{ overflowX:"auto" }}>
+                    <table style={{ borderCollapse:"collapse", fontSize:".72rem", whiteSpace:"nowrap" }}>
+                      <thead>
+                        <tr>
+                          <th style={{ position:"sticky", left:0, background:C.card, padding:"6px 10px", textAlign:"left", borderBottom:`2px solid ${C.border}` }}>氏名</th>
+                          {days.map(d => (
+                            <th key={d} style={{ padding:"6px 8px", borderBottom:`2px solid ${C.border}`, fontWeight:700, color:C.muted }}>{d}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {reportStaff.map(s => (
+                          <tr key={s.id}>
+                            <td style={{ position:"sticky", left:0, background:C.card, padding:"6px 10px", fontWeight:700, borderBottom:`1px solid ${C.border}` }}>{s.name}</td>
+                            {days.map(d => (
+                              <td key={d} style={{ padding:"6px 8px", borderBottom:`1px solid ${C.border}`, textAlign:"center", color:C.muted }}>{cellFor(s.id, d)}</td>
+                            ))}
+                          </tr>
+                        ))}
+                        {reportStaff.length === 0 && (
+                          <tr><td colSpan={nDays+1} style={{ padding:20, textAlign:"center", color:C.muted }}>該当するスタッフがいません</td></tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                );
+              })()}
+            </div>
           </div>
         )}
 
