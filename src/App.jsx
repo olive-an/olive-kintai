@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import jsQR from "jsqr";
 
 // ── 初期データ ──
 const INITIAL_HOMES = [
@@ -143,7 +144,7 @@ export default function App() {
   const [punches, setPunches] = useState([]); // {id, staffId, date, type, ts, time}
   const [leaves, setLeaves]   = useState([]); // {id, staffId, staffName, start, end, days, reason, type, status, appliedAt}
 
-  const [screen, setScreen] = useState("top"); // top | homeSelect | staffSelect | staffHome | adminPw | adminHome
+  const [screen, setScreen] = useState("top"); // top | qrScan | homeSelect | staffSelect | staffHome | adminPw | adminHome
   const [mode, setMode]     = useState(null);  // "staff" | "admin"
   const [selectedHome, setSelectedHome] = useState(null);
   const [selectedStaff, setSelectedStaff] = useState(null);
@@ -158,6 +159,11 @@ export default function App() {
   const [dismissedNotifIds, setDismissedNotifIds] = useState([]);
   const [qrStaffId, setQrStaffId] = useState(null);
   const [qrHomeId, setQrHomeId] = useState(null);
+  const [scanError, setScanError] = useState("");
+  const videoRef = useRef(null);
+  const canvasRef = useRef(null);
+  const scanStreamRef = useRef(null);
+  const scanFrameRef = useRef(null);
 
   // スタッフ管理フォーム
   const [newStaffName, setNewStaffName]   = useState("");
@@ -177,8 +183,8 @@ export default function App() {
   const [newAdminPw, setNewAdminPw]       = useState("");
   const [adminPwLocal, setAdminPwLocal]   = useState(ADMIN_PASSWORD);
 
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
+  function openFromSearch(search) {
+    const params = new URLSearchParams(search);
     const staffId = Number(params.get("staff"));
     const homeId = params.get("home");
     if (staffId) {
@@ -186,7 +192,7 @@ export default function App() {
       if (match) {
         setSelectedStaff(match); setStaffTab("punch"); setMode("staff"); setScreen("staffHome");
         requestNotificationPermission();
-        return;
+        return true;
       }
     }
     if (homeId) {
@@ -194,9 +200,62 @@ export default function App() {
       if (match) {
         setSelectedHome(match); setMode("staff"); setScreen("staffSelect");
         requestNotificationPermission();
+        return true;
       }
     }
+    return false;
+  }
+
+  useEffect(() => {
+    openFromSearch(window.location.search);
   }, []);
+
+  useEffect(() => {
+    if (screen !== "qrScan") return;
+    setScanError("");
+    let cancelled = false;
+
+    navigator.mediaDevices?.getUserMedia({ video: { facingMode: "environment" } })
+      .then(stream => {
+        if (cancelled) { stream.getTracks().forEach(t => t.stop()); return; }
+        scanStreamRef.current = stream;
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          videoRef.current.play();
+        }
+        const canvas = canvasRef.current;
+        const ctx = canvas.getContext("2d", { willReadFrequently: true });
+        const tick = () => {
+          const video = videoRef.current;
+          if (!video || video.readyState !== video.HAVE_ENOUGH_DATA) {
+            scanFrameRef.current = requestAnimationFrame(tick);
+            return;
+          }
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          const code = jsQR(imageData.data, imageData.width, imageData.height);
+          if (code?.data) {
+            let search = "";
+            try { search = new URL(code.data).search; }
+            catch { search = code.data.includes("?") ? code.data.slice(code.data.indexOf("?")) : ""; }
+            if (openFromSearch(search)) return;
+            setScanError("認識できるQRコードではありません");
+          }
+          scanFrameRef.current = requestAnimationFrame(tick);
+        };
+        scanFrameRef.current = requestAnimationFrame(tick);
+      })
+      .catch(() => setScanError("カメラを起動できませんでした。ブラウザのカメラ許可を確認してください"));
+
+    return () => {
+      cancelled = true;
+      if (scanFrameRef.current) cancelAnimationFrame(scanFrameRef.current);
+      scanStreamRef.current?.getTracks().forEach(t => t.stop());
+      scanStreamRef.current = null;
+    };
+  }, [screen]);
 
   useEffect(() => {
     const tick = () => {
@@ -338,11 +397,19 @@ export default function App() {
       <div style={{ fontSize:".85rem", color:"rgba(255,255,255,.6)", marginBottom:36 }}>おりーぶ庵株式会社</div>
       <div style={{ width:"100%", maxWidth:380 }}>
         <button onClick={() => { setMode("staff"); setScreen("homeSelect"); requestNotificationPermission(); }}
-          style={{ ...S.btn(C.card, C.olive, `2px solid ${C.olive}`), marginBottom:0, display:"flex", alignItems:"center", gap:12, padding:"18px 20px" }}>
+          style={{ ...S.btn(C.card, C.olive, `2px solid ${C.olive}`), marginBottom:12, display:"flex", alignItems:"center", gap:12, padding:"18px 20px" }}>
           <div style={{ width:40, height:40, borderRadius:"50%", background:C.olivePale, display:"flex", alignItems:"center", justifyContent:"center", fontSize:"1.2rem" }}>👤</div>
           <div style={{ textAlign:"left" }}>
             <div style={{ fontWeight:800, color:C.olive }}>従業員モード</div>
             <div style={{ fontSize:".78rem", color:C.muted, fontWeight:400, marginTop:2 }}>打刻・有給申請はこちら</div>
+          </div>
+        </button>
+        <button onClick={() => { setMode("staff"); setScreen("qrScan"); }}
+          style={{ ...S.btn("rgba(255,255,255,.1)", "#fff", "1px solid rgba(255,255,255,.3)"), marginBottom:0, display:"flex", alignItems:"center", gap:12, padding:"18px 20px" }}>
+          <div style={{ width:40, height:40, borderRadius:"50%", background:"rgba(255,255,255,.15)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:"1.2rem" }}>📷</div>
+          <div style={{ textAlign:"left" }}>
+            <div style={{ fontWeight:800 }}>QRコードを読み取る</div>
+            <div style={{ fontSize:".78rem", color:"rgba(255,255,255,.6)", fontWeight:400, marginTop:2 }}>ホーム・個人のQRコードで直接打刻</div>
           </div>
         </button>
       </div>
@@ -351,6 +418,25 @@ export default function App() {
         style={{ position:"fixed", top:14, right:14, background:"rgba(255,255,255,.12)", border:"1px solid rgba(255,255,255,.25)", borderRadius:8, padding:"6px 12px", color:"rgba(255,255,255,.6)", fontSize:".72rem", fontWeight:600, cursor:"pointer", backdropFilter:"blur(4px)", zIndex:100 }}>
         🔐 管理者
       </button>
+    </div>
+  );
+
+  // ── QRコード読み取り ──
+  if (screen === "qrScan") return (
+    <div style={{ ...S.page, background:"#000", minHeight:"100vh", display:"flex", flexDirection:"column" }}>
+      <FeedbackBar />
+      <div style={{ padding:"16px 16px 8px" }}>
+        <button onClick={() => setScreen("top")} style={{ background:"none", border:"none", color:"#fff", fontSize:".85rem", cursor:"pointer", padding:0 }}>← 戻る</button>
+      </div>
+      <div style={{ flex:1, position:"relative", display:"flex", alignItems:"center", justifyContent:"center", padding:16 }}>
+        <video ref={videoRef} playsInline muted style={{ width:"100%", maxWidth:420, borderRadius:16, background:"#111" }} />
+        <div style={{ position:"absolute", width:"min(70%, 260px)", aspectRatio:"1", border:"3px solid rgba(255,255,255,.7)", borderRadius:16, boxShadow:"0 0 0 999px rgba(0,0,0,.35)" }} />
+      </div>
+      <canvas ref={canvasRef} style={{ display:"none" }} />
+      <div style={{ padding:"12px 24px 32px", textAlign:"center" }}>
+        <div style={{ color:"rgba(255,255,255,.75)", fontSize:".85rem", marginBottom:8 }}>ホームまたは個人のQRコードを枠内に映してください</div>
+        {scanError && <div style={{ color:"#ff8a8a", fontSize:".85rem" }}>{scanError}</div>}
+      </div>
     </div>
   );
 
