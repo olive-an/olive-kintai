@@ -428,13 +428,17 @@ export default function App() {
       <div style={{ fontSize:"1.4rem", fontWeight:800, marginBottom:4, color:"#ffffff" }}>勤怠管理</div>
       <div style={{ fontSize:".85rem", color:"rgba(255,255,255,.6)", marginBottom:36 }}>おりーぶ庵株式会社</div>
       <div style={{ width:"100%", maxWidth:380 }}>
-        <button onClick={() => { setMode("staff"); setScreen("qrScan"); }}
-          style={{ ...S.btn(C.card, C.olive, `2px solid ${C.olive}`), marginBottom:0, display:"flex", alignItems:"center", gap:12, padding:"18px 20px" }}>
-          <div style={{ width:40, height:40, borderRadius:"50%", background:C.olivePale, display:"flex", alignItems:"center", justifyContent:"center", fontSize:"1.2rem" }}>📷</div>
-          <div style={{ textAlign:"left" }}>
-            <div style={{ fontWeight:800, color:C.olive }}>勤怠</div>
-            <div style={{ fontSize:".78rem", color:C.muted, fontWeight:400, marginTop:2 }}>QRコードを読み取って打刻・有給申請</div>
-          </div>
+        <div style={{ background:C.card, borderRadius:16, padding:"20px 18px", boxShadow:"0 4px 20px rgba(0,0,0,.2)" }}>
+          <div style={{ fontWeight:800, marginBottom:12, textAlign:"center" }}>お名前をフルネームで入力してください</div>
+          <input type="text" value={pwInput} onChange={e => setPwInput(e.target.value)}
+            onKeyDown={e => e.key === "Enter" && checkTopName()}
+            placeholder="例：山田 花子" style={{ ...S.input, textAlign:"center", fontSize:"1.15rem" }} />
+          {pwError && <div style={{ color:C.danger, fontSize:".82rem", marginBottom:10, textAlign:"center" }}>{pwError}</div>}
+          <button onClick={checkTopName} style={{ ...S.btn(C.olive, "#fff"), marginBottom:0 }}>開く</button>
+        </div>
+        <button onClick={() => { setMode("staff"); setPwInput(""); setPwError(""); setScreen("qrScan"); }}
+          style={{ background:"none", border:"none", color:"rgba(255,255,255,.7)", fontSize:".85rem", cursor:"pointer", padding:"16px 0 0", width:"100%", display:"flex", alignItems:"center", justifyContent:"center", gap:6 }}>
+          📷 QRコードで読み取る
         </button>
       </div>
       {/* 管理者ボタン：右上に小さく */}
@@ -515,6 +519,21 @@ export default function App() {
       </div>
     </div>
   );
+
+  function checkTopName() {
+    const norm = str => str.replace(/\s+/g, "");
+    const match = staff.find(s => norm(s.name) === norm(pwInput));
+    if (!match) { setPwError("該当する名前が見つかりません。登録されているフルネームを入力してください"); return; }
+    setPwInput(""); setPwError(""); setSelectedStaff(match); setStaffTab("punch"); setMode("staff");
+    requestNotificationPermission();
+    if (match.homeIds.length <= 1) {
+      setSelectedHome(homes.find(h => h.id === match.homeIds[0]) || null);
+      setScreen("staffHome");
+    } else {
+      setSelectedHome(null);
+      setScreen("homePick");
+    }
+  }
 
   function checkStaffName() {
     const norm = str => str.replace(/\s+/g, "");
