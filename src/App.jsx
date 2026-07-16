@@ -288,7 +288,7 @@ export default function App() {
   }, [feedback]);
 
   useEffect(() => {
-    if (adminTab === "report" && reportPunches === null) loadReportPunches();
+    if ((adminTab === "report" || adminTab === "manage") && reportPunches === null) loadReportPunches();
   }, [adminTab]);
 
   // 今日のスタッフの打刻
@@ -325,6 +325,47 @@ export default function App() {
       .then(r => r.json())
       .then(data => { setReportPunches(data); setReportLoading(false); })
       .catch(() => { setReportError("読み込みに失敗しました。時間をおいて再度お試しください"); setReportLoading(false); });
+  }
+
+  function deletePunch(id) {
+    if (!window.confirm("この打刻記録を削除しますか？")) return;
+    fetch(GAS_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ action: "deletePunch", id }),
+    }).then(() => {
+      setReportPunches(prev => prev ? prev.filter(p => String(p.id) !== String(id)) : prev);
+      setFeedback({ msg: "削除しました", ok: true });
+    }).catch(() => setFeedback({ msg: "削除に失敗しました", ok: false }));
+  }
+
+  function downloadReportCSV() {
+    if (!reportPunches) return;
+    const reportStaff = staff.filter(s => !reportHome || s.homeIds.includes(reportHome));
+    const reportHomeName = homes.find(h => h.id === reportHome)?.name;
+    const nDays = daysInMonth(reportMonth);
+    const [ry, rm] = reportMonth.split("-").map(Number);
+    const monthPunches = reportPunches.filter(p => String(p.date).slice(0, 7) === reportMonth);
+    const cellFor = (staffId, day) => {
+      const dateStr2 = `${reportMonth}-${pad(day)}`;
+      const recs = monthPunches.filter(p => String(p.staffId) === String(staffId) && p.date === dateStr2 && (!reportHomeName || p.home === reportHomeName));
+      const inRec = recs.find(p => p.type === "出勤");
+      const outRec = [...recs].reverse().find(p => p.type === "退勤");
+      if (!inRec && !outRec) return "";
+      return `${inRec?.time || ""}〜${outRec?.time || ""}`;
+    };
+    const rows = [["日付", ...reportStaff.map(s => s.name)]];
+    for (let d = 1; d <= nDays; d++) {
+      const wd = WEEKDAY[new Date(ry, rm - 1, d).getDay()];
+      rows.push([`${d}(${wd})`, ...reportStaff.map(s => cellFor(s.id, d))]);
+    }
+    const csv = "﻿" + rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\r\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `勤怠_${reportHomeName || "全ホーム"}_${reportMonth}.csv`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   }
 
   function submitLeave() {
@@ -817,7 +858,7 @@ export default function App() {
 
         {/* タブ */}
         <div style={{ display:"flex", background:C.card, borderBottom:`2px solid ${C.border}`, overflowX:"auto" }}>
-          {[["status","勤怠状況"],["leave","有給承認"],["staffMgr","スタッフ管理"],["report","月次集計"],["settings","設定"]].map(([t,l]) => (
+          {[["status","勤怠状況"],["leave","有給承認"],["staffMgr","スタッフ管理"],["report","月次集計"],["manage","データ管理"],["settings","設定"]].map(([t,l]) => (
             <button key={t} onClick={() => setAdminTab(t)}
               style={{ flex:1, padding:"12px 8px", border:"none", background:"none", fontWeight:700, fontSize:".82rem", cursor:"pointer", whiteSpace:"nowrap",
                 color: adminTab===t ? "#5560a0" : C.muted,
@@ -982,6 +1023,10 @@ export default function App() {
                   style={{ ...S.btn(C.olive, "#fff"), marginBottom:0, width:"auto", padding:"0 20px", opacity:reportLoading?.6:1 }}>
                   {reportLoading ? "読み込み中..." : "更新"}
                 </button>
+                <button onClick={downloadReportCSV} disabled={!reportPunches}
+                  style={{ ...S.btn("#fff", C.olive, `2px solid ${C.olive}`), marginBottom:0, width:"auto", padding:"0 20px", opacity:reportPunches?1:.5 }}>
+                  CSVダウンロード
+                </button>
               </div>
 
               {reportError && <div style={{ color:C.danger, fontSize:".85rem", textAlign:"center", padding:"12px 0" }}>{reportError}</div>}
@@ -1034,6 +1079,40 @@ export default function App() {
                 );
               })()}
             </div>
+          </div>
+        )}
+
+        {/* データ管理タブ */}
+        {adminTab === "manage" && (
+          <div style={{ padding:"12px 16px 32px" }}>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}>
+              <div style={{ fontWeight:700, fontSize:".9rem" }}>打刻記録一覧{reportPunches ? `（${reportPunches.length}件）` : ""}</div>
+              <button onClick={loadReportPunches} disabled={reportLoading}
+                style={{ ...S.btn(C.olive, "#fff"), marginBottom:0, width:"auto", padding:"6px 16px", fontSize:".8rem", opacity:reportLoading?.6:1 }}>
+                {reportLoading ? "読み込み中..." : "更新"}
+              </button>
+            </div>
+
+            {reportError && <div style={{ color:C.danger, fontSize:".85rem", textAlign:"center", padding:"12px 0" }}>{reportError}</div>}
+
+            {!reportError && reportPunches && (
+              [...reportPunches].sort((a, b) => (b.date + b.time).localeCompare(a.date + a.time)).map(p => (
+                <div key={p.id} style={{ ...S.card, display:"flex", alignItems:"center", gap:10, padding:"12px 14px" }}>
+                  <div style={{ flex:1 }}>
+                    <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:3 }}>
+                      <span style={S.tag(p.type==="出勤"?C.olivePale2:"#e8e8e8", p.type==="出勤"?C.olive:"#555")}>{p.type}</span>
+                      <span style={{ fontWeight:700 }}>{p.staffName}</span>
+                    </div>
+                    <div style={{ fontSize:".78rem", color:C.muted }}>{p.date}　{p.time}　{p.home || "（ホーム未記録）"}</div>
+                  </div>
+                  <button onClick={() => deletePunch(p.id)}
+                    style={{ background:C.dangerPale, border:"none", borderRadius:8, padding:"6px 12px", color:C.danger, fontWeight:700, fontSize:".78rem", cursor:"pointer" }}>削除</button>
+                </div>
+              ))
+            )}
+            {!reportError && reportPunches && reportPunches.length === 0 && (
+              <div style={{ textAlign:"center", color:C.muted, padding:24 }}>打刻記録はありません</div>
+            )}
           </div>
         )}
 
