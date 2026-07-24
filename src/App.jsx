@@ -655,14 +655,20 @@ export default function App() {
       <div style={S.page}>
         <FeedbackBar />
         {/* ヘッダー */}
-        <div style={{ padding:"16px 16px 12px", display:"flex", alignItems:"center", gap:10 }}>
-          <div style={{ width:38, height:38, borderRadius:"50%", background:selectedStaff.color, display:"flex", alignItems:"center", justifyContent:"center", fontWeight:800, fontSize:".85rem", color:"#444" }}>
-            {initials(selectedStaff.name)}
+        <div style={{ padding:"16px 16px 12px", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+          <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+            <div style={{ width:38, height:38, borderRadius:"50%", background:selectedStaff.color, display:"flex", alignItems:"center", justifyContent:"center", fontWeight:800, fontSize:".85rem", color:"#444" }}>
+              {initials(selectedStaff.name)}
+            </div>
+            <div>
+              <div style={{ fontWeight:800, fontSize:"1rem" }}>{selectedStaff.name}</div>
+              <div style={{ fontSize:".75rem", color:C.muted }}>{dateStr}</div>
+            </div>
           </div>
-          <div>
-            <div style={{ fontWeight:800, fontSize:"1rem" }}>{selectedStaff.name}</div>
-            <div style={{ fontSize:".75rem", color:C.muted }}>{dateStr}</div>
-          </div>
+          <button onClick={() => { setSelectedStaff(null); setSelectedHome(null); setPwInput(""); setPwError(""); setScreen("top"); }}
+            style={{ background:"none", border:`1px solid ${C.border}`, borderRadius:8, padding:"6px 12px", fontSize:".8rem", color:C.muted, cursor:"pointer" }}>
+            ← 戻る
+          </button>
         </div>
 
         {/* タブ */}
