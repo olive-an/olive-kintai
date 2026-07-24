@@ -291,6 +291,14 @@ export default function App() {
     if ((adminTab === "report" || adminTab === "manage") && reportPunches === null) loadReportPunches();
   }, [adminTab]);
 
+  useEffect(() => {
+    if (adminTab === "leave") loadLeaves();
+  }, [adminTab]);
+
+  useEffect(() => {
+    if (staffTab === "leave" && selectedStaff) loadLeaves();
+  }, [staffTab, selectedStaff]);
+
   // 今日のスタッフの打刻
   const todayPunches = (staffId) => punches.filter(p => p.staffId === staffId && p.date === TODAY());
 
@@ -383,6 +391,19 @@ export default function App() {
     setLeaveStart(""); setLeaveEnd(""); setLeaveReason(""); setLeaveType("全休");
     setFeedback({ msg: "有給申請を送信しました", ok: true });
     sendPushNotification("新しい有給申請", `${selectedStaff.name}さんから申請（${leaveStart}〜${end}）が届きました`);
+    fetch(GAS_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ action: "addLeave", id: rec.id, staffId: rec.staffId, staffName: rec.staffName,
+        start: rec.start, end: rec.end, days: rec.days, reason: rec.reason, type: rec.type, status: rec.status, appliedAt: rec.appliedAt }),
+    }).catch(() => {});
+  }
+
+  function loadLeaves() {
+    fetch(`${GAS_URL}?sheet=Leaves`)
+      .then(r => r.json())
+      .then(data => setLeaves(data.map(l => ({ ...l, days: Number(l.days) }))))
+      .catch(() => {});
   }
 
   // ── プッシュ通知 ──
@@ -402,13 +423,19 @@ export default function App() {
 
   function approveLeave(id, approved) {
     const target = leaves.find(l => l.id === id);
-    setLeaves(prev => prev.map(l => l.id === id ? { ...l, status: approved ? "承認済" : "却下" } : l));
+    const status = approved ? "承認済" : "却下";
+    setLeaves(prev => prev.map(l => l.id === id ? { ...l, status } : l));
     if (target) {
-      const status = approved ? "承認されました" : "却下されました";
-      const title = `有給申請が${status}`;
-      const body = `${target.staffName}さんの申請（${target.start}〜${target.end}）が${status}`;
+      const statusMsg = approved ? "承認されました" : "却下されました";
+      const title = `有給申請が${statusMsg}`;
+      const body = `${target.staffName}さんの申請（${target.start}〜${target.end}）が${statusMsg}`;
       sendPushNotification(title, body);
     }
+    fetch(GAS_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ action: "updateLeaveStatus", id, status }),
+    }).catch(() => {});
   }
 
   function addStaff() {
