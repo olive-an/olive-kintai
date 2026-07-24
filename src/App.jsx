@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import jsQR from "jsqr";
+import QRCode from "qrcode";
 
 // ── 初期データ ──
 const INITIAL_HOMES = [
@@ -167,6 +168,7 @@ export default function App() {
   const [dismissedNotifIds, setDismissedNotifIds] = useState([]);
   const [qrStaffId, setQrStaffId] = useState(null);
   const [qrHomeId, setQrHomeId] = useState(null);
+  const [qrDataUrl, setQrDataUrl] = useState("");
   const [scanError, setScanError] = useState("");
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
@@ -298,6 +300,18 @@ export default function App() {
   useEffect(() => {
     if (staffTab === "leave" && selectedStaff) loadLeaves();
   }, [staffTab, selectedStaff]);
+
+  useEffect(() => {
+    const url = qrStaffId
+      ? `${window.location.origin}${window.location.pathname}?staff=${qrStaffId}`
+      : qrHomeId
+      ? `${window.location.origin}${window.location.pathname}?home=${qrHomeId}`
+      : null;
+    if (!url) { setQrDataUrl(""); return; }
+    QRCode.toDataURL(url, { width: 200, margin: 1 })
+      .then(setQrDataUrl)
+      .catch(() => setQrDataUrl(""));
+  }, [qrStaffId, qrHomeId]);
 
   // 今日のスタッフの打刻
   const todayPunches = (staffId) => punches.filter(p => p.staffId === staffId && p.date === TODAY());
@@ -1029,8 +1043,9 @@ export default function App() {
                 </div>
                 {qrStaffId === s.id && (
                   <div style={{ marginTop:14, paddingTop:14, borderTop:`1px solid ${C.border}`, textAlign:"center" }}>
-                    <img src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qrUrl)}`}
-                      alt={`${s.name}の打刻QRコード`} style={{ width:180, height:180, borderRadius:8 }} />
+                    {qrDataUrl
+                      ? <img src={qrDataUrl} alt={`${s.name}の打刻QRコード`} style={{ width:180, height:180, borderRadius:8 }} />
+                      : <div style={{ width:180, height:180, borderRadius:8, background:C.olivePale, margin:"0 auto", display:"flex", alignItems:"center", justifyContent:"center", color:C.muted, fontSize:".78rem" }}>生成中...</div>}
                     <div style={{ fontSize:".72rem", color:C.muted, marginTop:8, wordBreak:"break-all" }}>{qrUrl}</div>
                     <button onClick={()=>{ navigator.clipboard?.writeText(qrUrl); setFeedback({ msg:"リンクをコピーしました", ok:true }); }}
                       style={{ marginTop:10, background:"none", border:`1px solid ${C.border}`, borderRadius:8, padding:"6px 14px", color:C.muted, fontWeight:700, fontSize:".78rem", cursor:"pointer" }}>リンクをコピー</button>
@@ -1166,8 +1181,9 @@ export default function App() {
                     </div>
                     {qrHomeId === h.id && (
                       <div style={{ marginTop:12, textAlign:"center" }}>
-                        <img src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qrUrl)}`}
-                          alt={`${h.name}のQRコード`} style={{ width:180, height:180, borderRadius:8 }} />
+                        {qrDataUrl
+                          ? <img src={qrDataUrl} alt={`${h.name}のQRコード`} style={{ width:180, height:180, borderRadius:8 }} />
+                          : <div style={{ width:180, height:180, borderRadius:8, background:C.olivePale, margin:"0 auto", display:"flex", alignItems:"center", justifyContent:"center", color:C.muted, fontSize:".78rem" }}>生成中...</div>}
                         <div style={{ fontSize:".72rem", color:C.muted, marginTop:8, wordBreak:"break-all" }}>{qrUrl}</div>
                         {h.address && (
                           <div style={{ marginTop:10 }}>
