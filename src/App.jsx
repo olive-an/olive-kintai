@@ -3,13 +3,13 @@ import jsQR from "jsqr";
 
 // ── 初期データ ──
 const INITIAL_HOMES = [
-  { id: "nishikujo",    name: "西九条ホーム",   area: "此花区",   password: "6797" },
-  { id: "kujo",         name: "九条ホーム",     area: "西区",     password: "kujo2" },
-  { id: "torishima",   name: "酉島ホーム",     area: "此花区",   password: "tori3" },
-  { id: "shinkoriyama",name: "新郡山ホーム",   area: "茨木市",   password: "shin4" },
-  { id: "kasugade",    name: "春日出ホーム",   area: "此花区",   password: "kasu5" },
-  { id: "dekijima",    name: "出来島ホーム",   area: "西淀川区", password: "deki6" },
-  { id: "honsha",      name: "本社",           area: "西淀川区", password: "olive0" },
+  { id: "nishikujo",    name: "西九条ホーム",   area: "此花区",   password: "6797",  address: "大阪市此花区西九条4-8-25" },
+  { id: "kujo",         name: "九条ホーム",     area: "西区",     password: "kujo2", address: "大阪市西区九条3-19-30" },
+  { id: "torishima",   name: "酉島ホーム",     area: "此花区",   password: "tori3", address: "大阪市此花区酉島1-14-16" },
+  { id: "shinkoriyama",name: "新郡山ホーム",   area: "茨木市",   password: "shin4", address: "大阪府茨木市新郡山2-35-10-13" },
+  { id: "kasugade",    name: "春日出ホーム",   area: "此花区",   password: "kasu5", address: "大阪市此花区春日出北1-2-3　サンロードマンション" },
+  { id: "dekijima",    name: "出来島ホーム",   area: "西淀川区", password: "deki6", address: "大阪市西淀川区大和田6-16-23" },
+  { id: "honsha",      name: "本社",           area: "西淀川区", password: "olive0", address: "" },
 ];
 
 const ADMIN_PASSWORD = "123456";
@@ -1169,6 +1169,14 @@ export default function App() {
                         <img src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qrUrl)}`}
                           alt={`${h.name}のQRコード`} style={{ width:180, height:180, borderRadius:8 }} />
                         <div style={{ fontSize:".72rem", color:C.muted, marginTop:8, wordBreak:"break-all" }}>{qrUrl}</div>
+                        {h.address && (
+                          <div style={{ marginTop:10 }}>
+                            <div style={{ fontSize:".82rem", fontWeight:700 }}>📍 {h.address}</div>
+                            <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(h.address)}`}
+                              target="_blank" rel="noopener noreferrer"
+                              style={{ fontSize:".76rem", color:C.blue, textDecoration:"underline" }}>地図で見る</a>
+                          </div>
+                        )}
                         <button onClick={()=>{ navigator.clipboard?.writeText(qrUrl); setFeedback({ msg:"リンクをコピーしました", ok:true }); }}
                           style={{ marginTop:10, background:"none", border:`1px solid ${C.border}`, borderRadius:8, padding:"6px 14px", color:C.muted, fontWeight:700, fontSize:".78rem", cursor:"pointer" }}>リンクをコピー</button>
                       </div>
